@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Celduc Panel Designer - Component Layout Tool</title>
+  <meta name="viewport" content="width=1024">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: #f8fafc;
+      color: #22223b;
+    }
+    .dragging {
+      opacity: 0.5;
+    }
+    .resize-handle {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      right: -5px;
+      bottom: -5px;
+      background: #60a5fa;
+      border-radius: 50%;
+      cursor: se-resize;
+      border: 2px solid #fff;
+      box-shadow: 0 0 2px 0 #0003;
+      z-index: 2;
+      display: none;
+    }
+    .draggable.selected .resize-handle {
+      display: block;
+    }
+    .library-scrollable {
+      max-height: 520px;
+      overflow-y: auto;
+    }
+    .modal-bg {
+      background: rgba(0,0,0,0.3);
+    }
+    @media (max-width: 1200px) {
+      .flex-wrap-lg {
+        flex-wrap: wrap;
+      }
+      .w-1-3 {
+        width: 100%;
+      }
+      .min-h-lg {
+        min-height: 300px;
+      }
+    }
+  </style>
+</head>
+<body class="p-6">
+  <header class="mb-8">
+    <div class="text-3xl font-bold text-blue-800 mb-1 flex items-center"><i class="fa-solid fa-bolt fa-fw mr-3 text-yellow-400"></i>Celduc Panel Designer – Panel Layout Tool</div>
+    <div class="text-lg text-gray-600">Phase 1: Foundational Digital Tool for Panel Design | <span class="font-semibold">Standalone Demo</span></div>
+  </header>
+
+  <section class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <h2 class="text-2xl font-semibold mb-2 text-blue-700">How This Tool Represents Phase 1 of Celduc's Strategic Vision</h2>
+    <p class="mb-2 text-gray-700">
+       This web tool makes it easy for panel builders, integrators, and engineers to visually design control panels by providing a digital workspace and a comprehensive, accurate library of components used alongside Celduc SSRs.<br>
+         </p>
+  </section>
+
+  <main class="flex flex-wrap-lg gap-6">
+    <!-- COMPONENT LIBRARY -->
+    <aside class="w-80 bg-white p-5 rounded-lg shadow-md w-1-3">
+      <h3 class="text-xl font-bold mb-4 text-blue-700 flex items-center"><i class="fa-solid fa-boxes-stacked mr-2"></i>Component Library</h3>
+
+      <nav class="mb-4">
+        <ul class="flex flex-wrap gap-2 text-sm">
+          <li><button class="component-tab px-3 py-1 rounded bg-blue-100 text-blue-700 font-semibold" data-category="all">All</button></li>
+          <li><button class="component-tab px-3 py-1 rounded bg-gray-100" data-category="SSR">SSRs</button></li>
+          <li><button class="component-tab px-3 py-1 rounded bg-gray-100" data-category="MCB">MCBs</button></li>
+          <li><button class="component-tab px-3 py-1 rounded bg-gray-100" data-category="PLC">PLCs</button></li>
+          <li><button class="component-tab px-3 py-1 rounded bg-gray-100" data-category="PSU">Power Supplies</button></li>
+          <li><button class="component-tab px-3 py-1 rounded bg-gray-100" data-category="Terminal">Terminal Blocks</button></li>
+          <li><button class="component-tab px-3 py-1 rounded bg-gray-100" data-category="Contactor">Contactors</button></li>
+          <li><button class="component-tab px-3 py-1 rounded bg-gray-100" data-category="Transformer">Transformers</button></li>
+          <li><button class="component-tab px-3 py-1 rounded bg-gray-100" data-category="Filter">Filters</button></li>
+          <li><button class="component-tab px-3 py-1 rounded bg-gray-100" data-category="Duct">Wiring Ducts</button></li>
+          <li><button class="component-tab px-3 py-1 rounded bg-gray-100" data-category="DIN">DIN Rails</button></li>
+        </ul>
+      </nav>
+
+      <div class="library-scrollable mb-4" style="min-height:260px">
+        <div id="component-list" class="grid gap-3"></div>
+      </div>
+
+      <button id="add-missing-btn" class="w-full py-2 text-base font-medium rounded-md bg-yellow-400 hover:bg-yellow-300 text-blue-900 flex items-center justify-center mb-1 shadow">
+        <i class="fa-solid fa-plus-circle mr-2"></i>Add a missing component
+      </button>
+    </aside>
+
+    <!-- DESIGN SURFACE AND TOOLS -->
+    <section class="flex-1 min-w-[650px] w-1-3 min-h-lg">
+      <div class="bg-white rounded-lg shadow-md p-5">
+        <div class="flex items-center mb-4 justify-between">
+          <h3 class="text-xl font-bold text-blue-700 flex items-center"><i class="fa-solid fa-diagram-project mr-2"></i>Design Surface</h3>
+          <div class="space-x-2 text-sm">
+            <button id="align-left" title="Align Left" class="p-2 rounded bg-gray-200 hover:bg-blue-200 text-blue-800"><i class="fa-solid fa-align-left"></i></button>
+            <button id="align-h-center" title="Align Horizontal Center" class="p-2 rounded bg-gray-200 hover:bg-blue-200 text-blue-800"><i class="fa-solid fa-align-center"></i></button>
+            <button id="align-v-center" title="Align Vertical Center" class="p-2 rounded bg-gray-200 hover:bg-blue-200 text-blue-800"><i class="fa-solid fa-arrows-up-down"></i></button>
+            <button id="align-top" title="Align Top" class="p-2 rounded bg-gray-200 hover:bg-blue-200 text-blue-800"><i class="fa-solid fa-align-justify"></i></button>
+            <button id="remove-selected" title="Remove Selected" class="p-2 rounded bg-red-100 hover:bg-red-200 text-red-800"><i class="fa-solid fa-trash"></i></button>
+            <span class="ml-5 text-sm text-gray-500">Tip: Drag components to workspace. Click for sizing/selection.</span>
+          </div>
+        </div>
+        <div class="flex justify-center">
+          <div id="design-surface"
+               class="relative bg-gray-100 rounded border-2 border-blue-200"
+               style="width:900px;height:540px;min-width:600px;min-height:350px;overflow:visible;margin-top:5px">
+            <!-- Grid background -->
+            <canvas id="grid-canvas"
+                    width="900" height="540"
+                    style="position:absolute;left:0;top:0;z-index:0;pointer-events:none"></canvas>
+            <!-- Dragged components rendered here -->
+            <div id="placed-components" class="absolute left-0 top-0 w-full h-full"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Suggestion Modal -->
+  <div id="suggest-modal" class="fixed inset-0 hidden items-center justify-center z-40">
+    <div class="absolute inset-0 modal-bg"></div>
+    <div class="relative bg-white w-full max-w-lg rounded-lg shadow-lg p-7 mx-auto">
+      <h4 class="text-xl font-bold mb-3 text-blue-700 flex items-center"><i class="fa-solid fa-lightbulb mr-2"></i>Suggest a Missing Component</h4>
+      <form id="suggest-form">
+        <div class="mb-2">
+          <label class="font-semibold">Component Name<span class="text-red-500">*</span></label>
+          <input required type="text" name="compname" class="w-full border rounded p-2 mt-1" placeholder="E.g. Residual Current Device, Special Relay...">
+        </div>
+        <div class="mb-2">
+          <label class="font-semibold">Description / Specs</label>
+          <textarea name="description" class="w-full border rounded p-2 mt-1" rows="2" placeholder="Briefly describe the function, size, features, etc."></textarea>
+        </div>
+        <div class="mb-2">
+          <label class="font-semibold">Contact (Optional)</label>
+          <input type="email" name="email" class="w-full border rounded p-2 mt-1" placeholder="Your email (if follow-up needed)">
+        </div>
+        <div class="flex justify-end space-x-2 mt-4">
+          <button type="button" id="close-modal-btn" class="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded bg-yellow-400 text-blue-900 font-semibold hover:bg-yellow-300"><i class="fa-solid fa-paper-plane mr-1"></i>Submit Suggestion</button>
+        </div>
+      </form>
+      <div id="suggest-success" class="hidden text-green-800 bg-green-100 px-4 py-2 rounded mt-4">
+        <i class="fa-solid fa-check-circle mr-1"></i>Your suggestion has been recorded! Thank you.
+      </div>
+    </div>
+  </div>
+  
+  <!-- Script Section -->
+  <script>
+    // *** COMPONENTS DATA ***
+    const components = [
+      // --- SSR Example (already selected so always shown) ---
+      {
+        name: 'Celduc SSR',
+        key: 'SSR',
+        category: 'SSR',
+        icon: 'fa-bolt',
+        color: 'bg-blue-200',
+        w: 54, // mm, for PDF scaling
+        h: 90,
+        desc: 'Solid State Relay, core Celduc device. Typical 54x90mm body.'
+      },
+      // --- Other Library Components ---
+      {
+        name: 'MCB 2P',
+        key: 'MCB2P',
+        category: 'MCB',
+        icon: 'fa-toggle-on',
+        color: 'bg-green-100',
+        w: 36,
+        h: 80,
+        desc: 'Miniature Circuit Breaker, Dual-Pole, 36x80mm body.'
+      },
+      {
+        name: 'PLC Module',
+        key: 'PLC',
+        category: 'PLC',
+        icon: 'fa-microchip',
+        color: 'bg-orange-100',
+        w: 80,
+        h: 120,
+        desc: 'Programmable Logic Controller Module, approx. 80x120mm.'
+      },
+      {
+        name: 'Power Supply',
+        key: 'PSU',
+        category: 'PSU',
+        icon: 'fa-plug-circle-bolt',
+        color: 'bg-yellow-100',
+        w: 60,
+        h: 120,
+        desc: 'Power Supply Unit, 60x120mm.'
+      },
+      {
+        name: 'Terminal Block',
+        key: 'Terminal',
+        category: 'Terminal',
+        icon: 'fa-terminal',
+        color: 'bg-gray-200',
+        w: 16,
+        h: 70,
+        desc: 'Terminal block for wire connections, 16x70mm.'
+      },
+      {
+        name: 'Contactor',
+        key: 'Contactor',
+        category: 'Contactor',
+        icon: 'fa-link',
+        color: 'bg-purple-100',
+        w: 60,
+        h: 90,
+        desc: 'Contactor relay, 60x90mm.'
+      },
+      {
+        name: 'Transformer',
+        key: 'Transformer',
+        category: 'Transformer',
+        icon: 'fa-arrows-rotate',
+        color: 'bg-pink-100',
+        w: 75,
+        h: 110,
+        desc: 'Transformer, 75x110mm.'
+      },
+      {
+        name: 'EMI Filter',
+        key: 'Filter',
+        category: 'Filter',
+        icon: 'fa-sliders-h',
+        color: 'bg-teal-100',
+        w: 45,
+        h: 36,
+        desc: 'EMI/RFI Filter, 45x36mm.'
+      },
+      {
+        name: 'Wiring Duct',
+        key: 'Duct',
+        category: 'Duct',
+        icon: 'fa-grip-lines-vertical',
+        color: 'bg-blue-50',
+        w: 25,
+        h: 120,
+        desc: 'Wiring Duct for routing, 25x120mm.'
+      },
+      {
+        name: 'DIN Rail',
+        key: 'DIN',
+        category: 'DIN',
+        icon: 'fa-road',
+        color: 'bg-gray-100',
+        w: 200,
+        h: 8,
+        desc: 'DIN Mounting Rail, 200x8mm.'
+      },
+    ]
+    let currentCategory = 'all';
+
+    // *** RENDER COMPONENT LIBRARY ***
+    function renderLibrary() {
+      const list = document.getElementById('component-list');
+      list.innerHTML = "";
+      const shown = components.filter(c => currentCategory === 'all' || c.category === currentCategory);
+      if (!shown.length) {
+        list.innerHTML = '<div class="text-gray-400 text-center py-6"><i class="fa fa-ban"></i> No components in this category.</div>';
+        return;
+      }
+      shown.forEach((comp, idx) => {
+        // Ratio for workspace: 4px per mm
+        const pxW = Math.round(comp.w * 4 / 3);
+        const pxH = Math.round(comp.h * 4 / 3);
+        const el = document.createElement('div');
+        el.className = `draggable-catalog flex items-center gap-2 p-2 border rounded cursor-grab group bg-gray-50 hover:${comp.color} shadow-sm transition`;
+        el.setAttribute('draggable', 'true');
+        el.setAttribute('data-key', comp.key);
+        el.innerHTML = `
+          <div class="flex-none flex items-center justify-center rounded ${comp.color} w-10 h-10 text-2xl shadow">
+            <i class="fa-solid ${comp.icon}"></i>
+          </div>
+          <div>
+            <div class="font-semibold text-blue-900 group-hover:underline">${comp.name}</div>
+            <div class="text-xs text-gray-500">${comp.desc}</div>
+            <div class="text-gray-400 text-xs mt-1">Size: ${comp.w}×${comp.h}mm</div>
+          </div>
+        `;
+        list.appendChild(el);
+      });
+    }
+
+    // Category tab switching
+    document.querySelectorAll('.component-tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.component-tab').forEach(t => t.classList.remove('bg-blue-100', 'text-blue-700', 'font-semibold','bg-gray-100'));
+        this.classList.add('bg-blue-100','text-blue-700','font-semibold');
+        currentCategory = this.dataset.category;
+        renderLibrary();
+      });
+    });
+
+    // Initial render
+    renderLibrary();
+
+    // *** DESIGN SURFACE DRAG&DROP LOGIC ***
+    let dragComp = null, offsetX=0, offsetY=0;
+    const designSurface = document.getElementById('placed-components');
+    let placed = [];
+    let selectedId = null;
+
+    // Handle drag from library
+    document.addEventListener('dragstart', function(e) {
+      if (!e.target.classList.contains('draggable-catalog')) return;
+      dragComp = components.find(c => c.key === e.target.getAttribute('data-key'));
+      e.dataTransfer.setData('text/plain', dragComp.key);
+      e.target.classList.add('dragging');
+    });
+    document.addEventListener('dragend', e => {
+      if (!e.target.classList.contains('draggable-catalog')) return;
+      e.target.classList.remove('dragging');
+      dragComp = null;
+    });
+    // Allow drop
+    document.getElementById('design-surface').addEventListener('dragover', e => {
+      e.preventDefault();
+    });
+    document.getElementById('design-surface').addEventListener('drop', function(e) {
+      if (!dragComp) return;
+      // Board offset
+      const rect = this.getBoundingClientRect();
+      const x = e.clientX - rect.left - Math.round(dragComp.w * 2 / 3);
+      const y = e.clientY - rect.top - Math.round(dragComp.h * 2 / 3);
+      const id = 'comp'+Math.random().toString(36).substr(2,7);
+      placed.push({
+        id,
+        ...dragComp,
+        x,
+        y,
+        wPx: Math.round(dragComp.w * 4 / 3),
+        hPx: Math.round(dragComp.h * 4 / 3),
+        selected: false
+      });
+      renderPlaced();
+      dragComp = null;
+    });
+
+    // Render grid background canvas
+    function drawGrid() {
+      const canvas = document.getElementById('grid-canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.strokeStyle = '#dbeafe';
+      ctx.lineWidth = 1;
+      for(let x=0; x<canvas.width; x+=20) {
+        ctx.beginPath();
+        ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke();
+      }
+      for(let y=0; y<canvas.height; y+=20) {
+        ctx.beginPath();
+        ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke();
+      }
+    }
+    drawGrid();
+
+    // Render placed components
+    function renderPlaced() {
+      const pc = document.getElementById('placed-components');
+      pc.innerHTML = "";
+      placed.forEach((item,idx) => {
+        const compDiv = document.createElement('div');
+        compDiv.className = `absolute draggable select-none ${item.selected ? 'ring-4 ring-blue-400 selected':''} group`;
+        compDiv.setAttribute('data-id', item.id);
+        compDiv.setAttribute('tabindex', '0');
+        compDiv.style.left = `${item.x}px`;
+        compDiv.style.top = `${item.y}px`;
+        compDiv.style.width = `${item.wPx}px`;
+        compDiv.style.height = `${item.hPx}px`;
+        compDiv.style.zIndex = item.selected ? 10 : 1;
+        compDiv.innerHTML = `
+          <div class="flex w-full h-full items-center justify-center text-3xl ${item.color} rounded shadow relative group transition">
+            <i class="fa-solid ${item.icon}"></i>
+            <span class="absolute bottom-0 right-0 text-xs text-gray-500 bg-white bg-opacity-70 p-0.5 rounded-tl">${item.name}</span>
+          </div>
+          <div class="resize-handle"></div>
+        `;
+        compDiv.addEventListener('mousedown', surfaceMouseDown);
+        compDiv.addEventListener('dblclick', () => { compDiv.classList.toggle('ring-4'); });
+        pc.appendChild(compDiv);
+      });
+    }
+
+    // Direct drag positioning for placed items
+    let movingId = null, moveOffsetX=0, moveOffsetY=0, resizingId = null, resizeS = null;
+    function surfaceMouseDown(e) {
+      const compDiv = e.currentTarget;
+      // Resize handle logic
+      if (e.target.classList.contains('resize-handle')) {
+        resizingId = compDiv.getAttribute('data-id');
+        resizeS = {x: e.pageX, y: e.pageY};
+        document.body.style.cursor = 'se-resize';
+        window.addEventListener('mousemove', onResizeMove);
+        window.addEventListener('mouseup', onResizeUp);
+        return;
+      }
+      movingId = compDiv.getAttribute('data-id');
+      selectComponent(movingId);
+      moveOffsetX = e.offsetX;
+      moveOffsetY = e.offsetY;
+      document.body.style.cursor = 'grabbing';
+      window.addEventListener('mousemove', onMoveMove);
+      window.addEventListener('mouseup', onMoveUp);
+    }
+
+    function selectComponent(id) {
+      placed.forEach(c=>c.selected=false);
+      selectedId = id;
+      const found = placed.find(c=>c.id===id);
+      if (found) found.selected = true;
+      renderPlaced();
+    }
+
+    function onMoveMove(e) {
+      const comp = placed.find(c => c.id === movingId);
+      if (!comp) return;
+      const boardRect = document.getElementById('design-surface').getBoundingClientRect();
+      let newX = e.clientX - boardRect.left - moveOffsetX;
+      let newY = e.clientY - boardRect.top - moveOffsetY;
+      // Clamp to board:
+      newX = Math.max(0, Math.min(boardRect.width-comp.wPx, newX));
+      newY = Math.max(0, Math.min(boardRect.height-comp.hPx, newY));
+      comp.x = newX; comp.y = newY;
+      renderPlaced();
+    }
+    function onMoveUp() {
+      movingId = null;
+      window.removeEventListener('mousemove', onMoveMove);
+      window.removeEventListener('mouseup', onMoveUp);
+      document.body.style.cursor = '';
+    }
+    function onResizeMove(e) {
+      const comp = placed.find(c=>c.id===resizingId);
+      if (!comp) return;
+      const dx = e.pageX - resizeS.x;
+      const dy = e.pageY - resizeS.y;
+      comp.wPx = Math.max(24, comp.wPx + dx);
+      comp.hPx = Math.max(18, comp.hPx + dy);
+      resizeS = {x: e.pageX, y: e.pageY};
+      renderPlaced();
+    }
+    function onResizeUp() {
+      resizingId = null;
+      window.removeEventListener('mousemove', onResizeMove);
+      window.removeEventListener('mouseup', onResizeUp);
+      document.body.style.cursor = '';
+    }
+    // Deselect on bg click
+    document.getElementById('design-surface').addEventListener('mousedown', e => {
+      if (e.target.id === 'design-surface' || e.target.id === 'grid-canvas') {
+        placed.forEach(c=>c.selected=false); selectedId = null;
+        renderPlaced();
+      }
+    });
+
+    // Keyboard remove
+    document.addEventListener('keydown', e=>{
+      if ((e.key==='Delete'||e.key==='Backspace') && selectedId) {
+        placed = placed.filter(c=>c.id!==selectedId); selectedId=null;
+        renderPlaced();
+      }
+    });
+
+    // Alignment tools
+    function getSelected() {
+      return placed.filter(c=>c.selected);
+    }
+
+    document.getElementById('align-left').onclick = function() {
+      const sel = getSelected(); if (!sel.length) return;
+      let minX = Math.min(...sel.map(c=>c.x));
+      sel.forEach(c=>c.x = minX);
+      renderPlaced();
+    }
+    document.getElementById('align-top').onclick = function() {
+      const sel = getSelected(); if (!sel.length) return;
+      let minY = Math.min(...sel.map(c=>c.y));
+      sel.forEach(c=>c.y = minY);
+      renderPlaced();
+    }
+    document.getElementById('align-h-center').onclick = function() {
+      const sel = getSelected(); if (!sel.length) return;
+      let avg = Math.round(sel.reduce((a,c)=>a+c.x,0)/sel.length);
+      sel.forEach(c=>c.x=avg);
+      renderPlaced();
+    }
+    document.getElementById('align-v-center').onclick = function() {
+      const sel = getSelected(); if (!sel.length) return;
+      let avg = Math.round(sel.reduce((a,c)=>a+c.y,0)/sel.length);
+      sel.forEach(c=>c.y=avg);
+      renderPlaced();
+    }
+    document.getElementById('remove-selected').onclick = function() {
+      if (!selectedId) return;
+      placed = placed.filter(c=>c.id!==selectedId);
+      selectedId=null;
+      renderPlaced();
+    }
+
+    // Initial SSR is always placed at center left, to show as "already selected"
+    if (!placed.length) {
+      placed.push({
+        ...components[0], // SSR
+        id: 'initialSSR',
+        x: 40,
+        y: 120,
+        wPx: Math.round(components[0].w * 4 / 3),
+        hPx: Math.round(components[0].h * 4 / 3),
+        selected: false
+      });
+    }
+    renderPlaced();
+
+    // -- Suggestion Modal Logic --
+    const suggestModal = document.getElementById('suggest-modal');
+    document.getElementById('add-missing-btn').onclick = function() {
+      suggestModal.classList.remove('hidden');
+      document.body.classList.add('overflow-y-hidden');
+      document.getElementById('suggest-form').reset();
+      document.getElementById('suggest-success').classList.add('hidden');
+    }
+    document.getElementById('close-modal-btn').onclick = function() {
+      suggestModal.classList.add('hidden');
+      document.body.classList.remove('overflow-y-hidden');
+    }
+    document.getElementById('suggest-form').onsubmit = function(e) {
+      e.preventDefault();
+      document.getElementById('suggest-success').classList.remove('hidden');
+      setTimeout(()=>{
+        suggestModal.classList.add('hidden');
+        document.body.classList.remove('overflow-y-hidden');
+      },1400);
+    }
+    suggestModal.addEventListener('mousedown', function(e) {
+      if (e.target === suggestModal) {
+        suggestModal.classList.add('hidden');
+        document.body.classList.remove('overflow-y-hidden');
+      }
+    });
+
+    // Avoid unwanted horizontal scroll for PDF output
+    document.documentElement.style.overflowX = 'hidden';
+    document.body.style.overflowX = 'hidden';
+  </script>
+</body>
+</html>
